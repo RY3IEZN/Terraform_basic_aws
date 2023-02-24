@@ -101,8 +101,21 @@ resource "aws_instance" "dev-node" {
 
   user_data = file("userdata.tpl")
 
+  provisioner "local-exec" {
+    command = templatefile("${var.host_os}-ssh-script.tpl", {
+      hostname     = self.public_ip
+      user         = "ubuntu"
+      identityfile = "~/.ssh/aws_devkey.pub"
+    })
+    interpreter = var.host_os == "windows" ? ["Powershell", "-Command"] : ["bash", "-c"]
+  }
 
   tags = {
     name = "dev-node"
   }
+}
+
+output "ip_address_instance" {
+  value = aws_instance.dev-node.public_ip
+
 }
